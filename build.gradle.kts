@@ -10,6 +10,7 @@ val junit5Version: String by project
 val jvmTargetVersion: String by project
 val kotestVersion: String by project
 val kotlinVersion: String by project
+val ktorVersion: String by project
 val logbackVersion: String by project
 
 group = appGroupId
@@ -29,9 +30,15 @@ dependencies {
     implementation("io.arrow-kt:arrow-core-data:$arrowKtVersion")
     implementation("io.arrow-kt:arrow-core:$arrowKtVersion")
     implementation("io.arrow-kt:arrow-fx-coroutines:$arrowKtVersion")
+    implementation("io.ktor:ktor-client-cio:$ktorVersion")
+    implementation("io.ktor:ktor-client-jackson:$ktorVersion")
+    implementation("io.ktor:ktor-client-json-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-client-logging-jvm:$ktorVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-slf4j:$coroutinesVersion")
 
-    testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion") { exclude(group = "io.arrow-kt") }
+    testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion") {
+        exclude(group = "io.arrow-kt")
+    }
     testImplementation("org.junit.jupiter:junit-jupiter:$junit5Version")
 
     testRuntimeOnly("ch.qos.logback:logback-classic:$logbackVersion")
