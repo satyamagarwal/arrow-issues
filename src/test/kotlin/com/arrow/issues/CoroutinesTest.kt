@@ -9,7 +9,6 @@ import arrow.fx.coroutines.evalOn
 import arrow.fx.coroutines.parTupledN
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.slf4j.MDCContext
-import kotlinx.coroutines.slf4j.MDCContextMap
 import org.junit.jupiter.api.Test
 import org.slf4j.MDC
 
@@ -151,5 +150,67 @@ internal class CoroutinesTest {
         }
 
         println("in test, $key: ${MDC.get(key)}") // 👍 : Correct behavior
+    }
+
+    @Test
+    fun `it just prints the different threads the cursor is in without MDCContext`(): Unit = runBlocking {
+        println("I am in ${getThreadName()}") // 👍 : Correct behavior
+
+        parTupledN(
+            suspend { println("I am in parTupledN, ${getThreadName()}") }, // 👍 : Correct behavior
+            suspend { println("I am in parTupledN, ${getThreadName()}") } // 👍 : Correct behavior
+        )
+
+        val result: Either<Throwable, String> = either {
+            println("I am in ${getThreadName()}") // 👍 : Correct behavior
+
+            val threadName: String = evalOn(ComputationPool) {
+                println("I am in ${getThreadName()}") // 👍 : Correct behavior
+
+                getThreadName().right()
+            }.bind()
+
+            println("Evaluated thread result : $threadName in ${getThreadName()}") // 👎 : it should print `in thread name` on line #47
+
+            parTupledN(
+                suspend { println("I am in ${getThreadName()}") }, // 👍 : Correct behavior
+                suspend { println("I am in ${getThreadName()}") } // 👍 : Correct behavior
+            )
+
+            threadName
+        }
+
+        println("Evaluated either block result : ${result.orNull()} in ${getThreadName()}") // 👎 : it should print `in thread name` on line #28
+    }
+
+    @Test
+    fun `it just prints the different threads the cursor is in without MDCContext with Arrow's Environment`(): Unit = Environment().unsafeRunSync {
+        println("I am in ${getThreadName()}") // 👍 : Correct behavior
+
+        parTupledN(
+            suspend { println("I am in parTupledN, ${getThreadName()}") }, // 👍 : Correct behavior
+            suspend { println("I am in parTupledN, ${getThreadName()}") } // 👍 : Correct behavior
+        )
+
+        val result: Either<Throwable, String> = either {
+            println("I am in ${getThreadName()}") // 👍 : Correct behavior
+
+            val threadName: String = evalOn(ComputationPool) {
+                println("I am in ${getThreadName()}") // 👍 : Correct behavior
+
+                getThreadName().right()
+            }.bind()
+
+            println("Evaluated thread result : $threadName in ${getThreadName()}") // 👎 : it should print `in thread name` on line #47
+
+            parTupledN(
+                suspend { println("I am in ${getThreadName()}") }, // 👍 : Correct behavior
+                suspend { println("I am in ${getThreadName()}") } // 👍 : Correct behavior
+            )
+
+            threadName
+        }
+
+        println("Evaluated either block result : ${result.orNull()} in ${getThreadName()}") // 👎 : it should print `in thread name` on line #28
     }
 }
